@@ -70,10 +70,22 @@ def _load_answers_from_file() -> list[dict]:
         return [to_new_row(ans) for ans in csv.DictReader(f)]
 
 
+def _normalize_sheet_record(row: dict) -> dict:
+    """相容試算表標題列拼字（answear_text / uploade_time）。"""
+    out = dict(row)
+    for old_key, new_key in (
+        ("answear_text", "answer_text"),
+        ("uploade_time", "upload_time"),
+    ):
+        if old_key in out and not str(out.get(new_key, "")).strip():
+            out[new_key] = out[old_key]
+    return out
+
+
 def _load_answers_from_sheet() -> list[dict]:
     ws = get_worksheet("answers")
     records = ws.get_all_records()
-    return [to_new_row(ans) for ans in records]
+    return [to_new_row(_normalize_sheet_record(ans)) for ans in records]
 
 
 def save_answers(rows: list[dict]) -> None:

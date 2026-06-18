@@ -2,9 +2,13 @@
 
 import json
 
-ANSWERS_SHEET_ID = "1lasUgPoaDM5O909Cu87EOCcazm3DU7QShuGwjXuS8gM"
-USERS_SHEET_ID = "1G3aM4qNQEyY__yvi-WQi1fA9DRIxk87FFnIU8d0C9jc"
-SESSION_SHEET_ID = "1PkNw_5ckpiHLTW6ikaelutCBCsrElxElujiPj-IUCac"
+# answers 與 users 同一試算表、不同分頁
+SPREADSHEET_ID = "1lasUgPoaDM5O909Cu87EOCcazm3DU7QShuGwjXuS8gM"
+
+_TAB_ALIASES = {
+    "answers": ["answers", "工作表1", "Sheet1"],
+    "users": ["users", "工作表2", "Sheet2"],
+}
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
@@ -43,14 +47,19 @@ def _get_client():
 def get_worksheet(sheet_key: str):
     import gspread
 
-    sheet_ids = {
-        "answers": ANSWERS_SHEET_ID,
-        "users": USERS_SHEET_ID,
-        "session": SESSION_SHEET_ID,
-    }
+    if sheet_key not in _TAB_ALIASES:
+        raise ValueError(f"未知的 sheet_key: {sheet_key}")
+
     client = _get_client()
-    spreadsheet = client.open_by_key(sheet_ids[sheet_key])
-    return spreadsheet.sheet1
+    spreadsheet = client.open_by_key(SPREADSHEET_ID)
+    for title in _TAB_ALIASES[sheet_key]:
+        try:
+            return spreadsheet.worksheet(title)
+        except gspread.WorksheetNotFound:
+            continue
+
+    index = {"answers": 0, "users": 1}[sheet_key]
+    return spreadsheet.get_worksheet(index)
 
 
 def parse_unlocked(value) -> list:
