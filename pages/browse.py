@@ -5,12 +5,12 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-import json
 import streamlit as st
 
 from utils.answers_store import format_label, is_unlocked, load_answers, make_unlock_id, normalize_meta
 from utils.questions_store import get_question
 from utils.session import restore_login
+from utils.users_store import load_users
 from utils.taxonomy import (
     build_year_value,
     list_academic_years,
@@ -32,8 +32,7 @@ if not st.session_state.get("logged_in"):
     st.warning("請先登入才能瀏覽")
     st.stop()
 
-with open("data/users.json", "r", encoding="utf-8") as f:
-    users = json.load(f)
+users = load_users()
 
 username = st.session_state["username"]
 balance = users[username]["tokens"]

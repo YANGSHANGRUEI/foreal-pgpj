@@ -5,11 +5,11 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-import json
 import streamlit as st
 
 from utils.answers_store import find_answer_by_unlock_id, format_label, load_answers
 from utils.session import restore_login
+from utils.users_store import load_users
 
 st.title("個人頁面")
 
@@ -19,8 +19,7 @@ if not st.session_state.get("logged_in"):
     st.warning("請先登入")
     st.stop()
 
-with open("data/users.json", "r", encoding="utf-8") as f:
-    users = json.load(f)
+users = load_users()
 answers = load_answers()
 
 username = st.session_state["username"]

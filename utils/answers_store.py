@@ -2,6 +2,7 @@ import csv
 import difflib
 import os
 
+from utils.sheets_client import get_worksheet, use_sheets
 from utils.taxonomy import parse_year_parts
 
 ANSWERS_FILE = "data/answers.csv"
@@ -57,18 +58,50 @@ def to_new_row(ans: dict) -> dict:
 
 
 def load_answers() -> list[dict]:
+    if use_sheets():
+        return _load_answers_from_sheet()
+    return _load_answers_from_file()
+
+
+def _load_answers_from_file() -> list[dict]:
     if not os.path.exists(ANSWERS_FILE):
         return []
     with open(ANSWERS_FILE, "r", encoding="utf-8") as f:
         return [to_new_row(ans) for ans in csv.DictReader(f)]
 
 
+def _load_answers_from_sheet() -> list[dict]:
+    ws = get_worksheet("answers")
+    records = ws.get_all_records()
+    return [to_new_row(ans) for ans in records]
+
+
 def save_answers(rows: list[dict]) -> None:
+    if use_sheets():
+        _save_answers_to_sheet(rows)
+    else:
+        _save_answers_to_file(rows)
+
+
+def _save_answers_to_file(rows: list[dict]) -> None:
     os.makedirs(os.path.dirname(ANSWERS_FILE), exist_ok=True)
     with open(ANSWERS_FILE, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=ANSWERS_FIELDS)
         writer.writeheader()
         writer.writerows(rows)
+
+
+def _save_answers_to_sheet(rows: list[dict]) -> None:
+    ws = get_worksheet("answers")
+    sheet_rows = [ANSWERS_FIELDS]
+    for row in rows:
+        normalized = to_new_row(row)
+        sheet_rows.append([normalized[field] for field in ANSWERS_FIELDS])
+    ws.clear()
+    if len(sheet_rows) > 1:
+        ws.update(sheet_rows, value_input_option="RAW")
+    else:
+        ws.update([ANSWERS_FIELDS], value_input_option="RAW")
 
 
 def row_identity(ans: dict) -> tuple[str, str, str, str, str]:

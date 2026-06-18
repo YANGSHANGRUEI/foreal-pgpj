@@ -5,28 +5,11 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-import json
 import hashlib
-import os
 import streamlit as st
 
 from utils.session import restore_login, save_login, clear_login
-
-USERS_FILE = "data/users.json"
-
-
-def load_users() -> dict:
-    os.makedirs(os.path.dirname(USERS_FILE), exist_ok=True)
-    if not os.path.exists(USERS_FILE):
-        return {}
-    with open(USERS_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def save_users(users: dict) -> None:
-    os.makedirs(os.path.dirname(USERS_FILE), exist_ok=True)
-    with open(USERS_FILE, "w", encoding="utf-8") as f:
-        json.dump(users, f, ensure_ascii=False, indent=2)
+from utils.users_store import load_users, save_users
 
 
 st.title("登入／註冊")
